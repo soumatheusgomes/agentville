@@ -1,0 +1,11 @@
+# Keep every text file LF in the working tree, on every platform.
+#
+# Without this, Git for Windows' default `core.autocrlf=true` rewrites the whole checkout to CRLF,
+# and `npm run lint` then fails with one `prettier/prettier: Delete ␍` error per line — thousands of
+# them — before a Windows contributor has changed anything. Prettier formats with LF (its default),
+# so the repo has to check out that way too.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending converted.
+*.png binary
+*.vsix binary

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { exec } from 'child_process';
+import * as path from 'path';
 import { computeSessionStatus, getOpenLogFiles } from '../sessionActivity';
 import { Session } from '../types';
 
@@ -114,7 +115,10 @@ describe('computeSessionStatus', () => {
 
   it('reports working when the log file is held open, whatever the heuristics say', () => {
     const stale = session({ lastInteractionTime: Date.now() - THIRTY_ONE_MINUTES });
-    const open = new Set([stale.logFilePath]);
+    // getOpenLogFiles normalizes every path it puts in this set, and computeSessionStatus
+    // normalizes before looking one up — so the fixture has to normalize too. Without it the
+    // POSIX-shaped fixture path never matched its own backslash-normalized form on Windows.
+    const open = new Set([path.normalize(stale.logFilePath)]);
 
     expect(computeSessionStatus(stale, open)).toBe('working');
   });

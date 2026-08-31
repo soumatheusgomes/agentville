@@ -92,15 +92,23 @@ export class ProjectPathResolver {
    * path separator, making it ambiguous to decode. Walks the file system to disambiguate.
    */
   public decodeClaudeProjectPath(projectDir: string): string {
-    // On Windows the encoded name won't start with '-' (a POSIX cwd always does, since it
-    // starts with '/'), so this guard falls through unchanged. Harmless: `detectClaudeCodeProjectPath`
-    // always prefers the real `cwd` field, which self-corrects this on the first parsed line.
-    if (!projectDir.startsWith('-')) return projectDir;
+    const encoded = this.splitEncodedRoot(projectDir);
+    if (!encoded) return projectDir;
     const cached = this.decodedPathCache.get(projectDir);
     if (cached !== undefined) return cached;
 
-    const parts = projectDir.substring(1).split('-');
-    let currentPath = '/';
+    const decoded = this.walkAmbiguousSegments(encoded.root, encoded.rest.split('-'));
+    this.decodedPathCache.set(projectDir, decoded);
+    return decoded;
+  }
+
+  /**
+   * Walk `parts` down from `root`, greedily rejoining as many segments as still name a directory
+   * that exists — that is what disambiguates a '-' that was a path separator from one that was a
+   * character inside a folder name.
+   */
+  private walkAmbiguousSegments(root: string, parts: string[]): string {
+    let currentPath = root;
     let i = 0;
     while (i < parts.length) {
       let foundNext = false;
@@ -118,8 +126,25 @@ export class ProjectPathResolver {
         i++;
       }
     }
-    this.decodedPathCache.set(projectDir, currentPath);
     return currentPath;
+  }
+
+  /**
+   * Split an encoded project-directory name into the filesystem root it starts from and the
+   * remaining, still-ambiguous segments — or null when the name isn't an encoded path at all.
+   *
+   * Both platforms encode the root, just differently: a POSIX cwd starts with '/', which collapses
+   * to a single leading '-' (`-Users-me-app`); a Windows cwd starts with a drive letter and ':\',
+   * whose two non-alphanumeric characters collapse to '--' (`C--Dev-REPZ` for `C:\Dev\REPZ`).
+   * Recognising only the POSIX form left the Windows walk unseeded, so decoding returned the raw
+   * encoded name and the tree showed `C--Dev-REPZ` as the project path.
+   */
+  private splitEncodedRoot(projectDir: string): { root: string; rest: string } | null {
+    if (projectDir.startsWith('-')) {
+      return { root: '/', rest: projectDir.substring(1) };
+    }
+    const windowsDrive = /^([A-Za-z])--(.*)$/.exec(projectDir);
+    return windowsDrive ? { root: `${windowsDrive[1]}:\\`, rest: windowsDrive[2] } : null;
   }
 
   private detectClaudeCodeProjectPath(json: LogEntry, session: Session): void {

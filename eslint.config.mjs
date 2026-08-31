@@ -108,21 +108,9 @@ export default defineConfig(
       'import-x/no-self-import': 'error',
       'import-x/no-useless-path-segments': 'error',
       'import-x/no-duplicates': 'error',
-      // Cross-import validation: production code must never reach into test code.
-      // The layer rule (core must not import the VS Code layer) is enforced
-      // separately by `boundaries` below.
-      'import-x/no-restricted-paths': [
-        'error',
-        {
-          zones: [
-            {
-              target: './src/*.ts',
-              from: './src/test',
-              message: 'Production code must not import from src/test — move the shared helper into src/.',
-            },
-          ],
-        },
-      ],
+      // Cross-import validation (production code must never reach into test code) lives in its
+      // own `files`-scoped block below — see the note there. The layer rule (core must not import
+      // the VS Code layer) is enforced separately by `boundaries` below.
 
       // Strict TypeScript / Clean Code
       // `max-params` is covered by the TS-aware variant below; the core `max-params`
@@ -142,6 +130,34 @@ export default defineConfig(
       // Numbers interpolate unambiguously; the rest of the family (objects, nullables,
       // `any`) stays banned so nothing stringifies to "[object Object]" in a log line.
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+    },
+  },
+  // Cross-import validation: production code must never reach into test code.
+  //
+  // Which files the rule guards is decided by ESLint's own `files` glob, not by the zone's
+  // `target`. That split is deliberate and platform-driven: `import-x/no-restricted-paths`
+  // resolves a globbed `target` to an absolute path and matches it with minimatch, which on
+  // Windows compares a forward-slash pattern against a backslash filename and silently matches
+  // nothing — the exact "misconfigured rules report nothing at all" failure mode that
+  // `src/test/lintRules.test.ts` exists to catch. A `target` with no glob in it takes the
+  // plugin's `containsPath` branch instead, which is path-aware and correct on both platforms.
+  // So: `files` narrows the rule to top-level production modules, and the zone only has to
+  // answer "is the import coming out of src/test?".
+  {
+    files: ['src/*.ts'],
+    rules: {
+      'import-x/no-restricted-paths': [
+        'error',
+        {
+          zones: [
+            {
+              target: './src',
+              from: './src/test',
+              message: 'Production code must not import from src/test — move the shared helper into src/.',
+            },
+          ],
+        },
+      ],
     },
   },
   // Layer boundaries: the dependency arrow only ever points inward, at the core.

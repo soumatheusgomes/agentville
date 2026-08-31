@@ -50,7 +50,7 @@ sends anything anywhere.
 ## Claude Code compatibility
 
 The parser depends on the Claude Code transcript format, which can change between releases.
-Last validated against **Claude Code 2.1.223**. Claude Code stamps a `version` field on every
+Last validated against **Claude Code 2.1.227**. Claude Code stamps a `version` field on every
 transcript line; when a newer one shows up in your logs, the extension shows a one-time
 warning so you know the parser hasn't been re-checked against it yet. See
 [docs/DEVELOPMENT.md](https://github.com/soumatheusgomes/agentville/blob/main/docs/DEVELOPMENT.md#claude-code-compatibility)

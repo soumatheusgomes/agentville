@@ -6,8 +6,14 @@
  * re-checked instead of silently mis-parsing.
  *
  * Bump this after validating the parser against a new Claude Code release.
+ *
+ * Last validated 2026-08-31 against a real Windows corpus of 111 transcripts spanning 2.1.197 →
+ * 2.1.227 (30 of them with subagents): every file parsed without error, 108 sessions resolved a
+ * model, and every project path decoded to a real directory. 2.1.227 is the newest version that
+ * corpus actually contained — deliberately not bumped to the installed CLI version, since a
+ * release with no transcripts on disk has validated nothing.
  */
-export const KNOWN_COMPATIBLE_CLAUDE_VERSION = '2.1.223';
+export const KNOWN_COMPATIBLE_CLAUDE_VERSION = '2.1.227';
 
 /** Compare two dotted numeric versions. Returns -1 if a < b, 1 if a > b, 0 if equal. Non-numeric
  * or missing segments compare as 0, so "2.1" == "2.1.0". Never throws. */
