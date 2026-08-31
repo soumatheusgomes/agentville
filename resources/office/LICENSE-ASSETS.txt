@@ -1,0 +1,58 @@
+Assets in this directory are recomposed from two Kenney (www.kenney.nl) asset packs.
+Both are distributed under the same licence, reproduced verbatim from each pack's own
+License.txt below.
+
+================================================================================
+Pack 1: Roguelike Indoors
+Source:  https://kenney.nl/assets/roguelike-indoors
+Used for: floor, wall*, rug, desk, chair, table, plant, sofa, shelf and printer tiles
+          composed into tiles.png (*wall face reused from RPG Urban Pack, see below).
+================================================================================
+
+	Roguelike Indoor pack
+
+	by Kenney Vleugels (Kenney.nl)
+
+			------------------------------
+
+	License (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	You may use these assets in personal and commercial projects.
+	Credit (Kenney or www.kenney.nl) would be nice but is not mandatory.
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+
+	Follow on Twitter for updates: @KenneyNL (www.twitter.com/kenneynl)
+
+================================================================================
+Pack 2: RPG Urban Pack
+Source:  https://kenney.nl/assets/rpg-urban-pack
+Used for: the brick wall tile in tiles.png, and all six character sprite sets in
+          characters.png (recomposed from the pack's directional NPC frames).
+================================================================================
+
+	RPG Urban Pack 1.0
+
+	Created/distributed by Kenney (www.kenney.nl)
+	Creation date: 05-01-2019
+
+			------------------------------
+
+	License: (Creative Commons Zero, CC0)
+	http://creativecommons.org/publicdomain/zero/1.0/
+
+	This content is free to use in personal, educational and commercial projects.
+	Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
+
+			------------------------------
+
+	Donate:   http://support.kenney.nl
+	Request:  http://request.kenney.nl
+	Patreon:  http://patreon.com/kenney/
+
+	Follow on Twitter for updates:
+	http://twitter.com/KenneyNL

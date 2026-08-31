@@ -41,3 +41,7 @@ vault-obsidian/
 # Fixture pair written by src/test/lintRules.test.ts to prove import-x/no-cycle
 # still fires; removed in afterAll, ignored here so a crashed run cannot commit one.
 src/zzLintProbe*.ts
+
+# Commercial office tileset — licensed per developer, never redistributed.
+# Optional local override: when present, the build copies it over resources/office/.
+resources/office-premium/
