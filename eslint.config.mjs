@@ -12,12 +12,21 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
 // parsing core"). Source files are flat under `src/`, so the layers are classified as
 // `boundaries/files` categories — `boundaries/elements` patterns match folders, not
 // individual files.
-const VSCODE_LAYER_MODULES = ['extension', 'sessionTreeDataProvider', 'treeItems', 'subagentTreeChildren'];
+const VSCODE_LAYER_MODULES = [
+  'extension',
+  'sessionTreeDataProvider',
+  'treeItems',
+  'subagentTreeChildren',
+  'officePanel',
+];
 const VSCODE_LAYER_GLOB = `src/{${VSCODE_LAYER_MODULES.join(',')}}.ts`;
 // Negated rather than a plain `src/*.ts` catch-all: categories match independently, so
 // an inclusive pattern would tag the VS Code modules as `core` as well and the layer
 // policy would then fire on their own legitimate imports. A new file dropped into
-// `src/` therefore lands in `core`, which is the restrictive side.
+// `src/` therefore lands in `core`, which is the restrictive side. This pattern has no
+// `**`, so it only matches direct children of `src/` — a nested folder such as
+// `src/webview/` never lands in `core` and needs its own explicit category, as
+// `webview-sim`/`webview-render` do below.
 const CORE_GLOB = `src/!(${VSCODE_LAYER_MODULES.join('|')}).ts`;
 
 export default defineConfig(
@@ -159,6 +168,14 @@ export default defineConfig(
         { category: 'test', pattern: 'src/test/*.ts' },
         { category: 'vscode-layer', pattern: VSCODE_LAYER_GLOB },
         { category: 'core', pattern: CORE_GLOB },
+        // The webview runs in a browser sandbox inside a VS Code panel — a separate
+        // runtime from the extension host, bundled separately (see esbuild.js) and
+        // deliberately outside the vscode-layer/core split above. `webview-sim` is the
+        // pure, unit-tested half (no Phaser, no DOM — enforced by the no-restricted-*
+        // rule further down); `webview-render` is the Phaser + DOM rendering/UI half.
+        { category: 'webview-sim', pattern: 'src/webview/simulation/**/*.ts' },
+        { category: 'webview-render', pattern: 'src/webview/main.ts' },
+        { category: 'webview-render', pattern: 'src/webview/{render,ui}/**/*.ts' },
       ],
     },
     rules: {
@@ -181,9 +198,37 @@ export default defineConfig(
               disallow: { to: { module: { origin: 'external', source: 'vscode' } } },
               message: 'The parsing core must stay `vscode`-free so it can be unit-tested without the VS Code API.',
             },
+            // The other half of "two bundles, two runtimes": the extension bundle is
+            // built with `platform: 'node'` and no `external` entry for Phaser, so an
+            // import here would silently inline it into dist/extension.js instead of
+            // failing the build.
+            {
+              from: { file: { categories: ['core', 'vscode-layer'] } },
+              disallow: { to: { module: { origin: 'external', source: 'phaser' } } },
+              message:
+                'Phaser is browser-only and belongs in the webview bundle — importing it here would bloat dist/extension.js.',
+            },
+            // The webview has no `vscode` API in its browser sandbox; it talks to the
+            // extension only through the ToWebview/ToExtension postMessage contract in
+            // officeTypes.ts.
+            {
+              from: { file: { categories: ['webview-sim', 'webview-render'] } },
+              disallow: { to: { module: { origin: 'external', source: 'vscode' } } },
+              message: 'The webview has no vscode API — communicate with the extension via postMessage instead.',
+            },
           ],
         },
       ],
+    },
+  },
+  // Simulation logic must stay renderable-agnostic: it is the only part of the webview
+  // covered by unit tests, and importing Phaser would make it untestable in vitest's
+  // node environment.
+  {
+    files: ['src/webview/simulation/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: ['phaser', 'phaser/*'] }],
+      'no-restricted-globals': ['error', 'document', 'window'],
     },
   },
   // VS Code's `TreeDataProvider` contract types its change event as
