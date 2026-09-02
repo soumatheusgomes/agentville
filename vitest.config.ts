@@ -29,6 +29,7 @@ export default defineConfig({
         'eslint.config.mjs',
         'scratch/**',
         'src/types.ts',
+        'src/officeTypes.ts',
         'src/extension.ts',
         'src/sessionTreeDataProvider.ts',
         'src/treeItems.ts',
