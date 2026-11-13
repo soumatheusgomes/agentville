@@ -4,6 +4,11 @@
 # https://github.com/<repo>/raw/HEAD/..., so the store loads them from GitHub and
 # the packed copy would never be read. Only resources/icon.png must ship.
 resources/screenshot*.png
+# Office art ships from dist/office/ (assembled by esbuild.js, with any local premium
+# override applied), so the source copies stay out of the bundle.
+resources/office/**
+resources/office-premium/**
+resources/ASSETS.md
 # Claude Code harness / dev tooling — must never ship in the extension bundle
 .claude/**
 vault-obsidian/**

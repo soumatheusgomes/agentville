@@ -33,23 +33,29 @@ const webviewOptions = {
   logLevel: "info",
 };
 
-// The premium tileset is licensed per developer and never committed. When the directory
-// exists locally its files win over the CC0 baseline; filenames are identical, so nothing
-// downstream branches on which tier is active.
-function applyPremiumAssets() {
-  const premium = path.join(__dirname, "resources", "office-premium");
-  const baseline = path.join(__dirname, "resources", "office");
-  if (!fs.existsSync(premium)) {
-    return;
+// The office art ships from dist/office/: the committed CC0 baseline first, then — when a
+// developer has a licensed premium tileset locally — its files on top. Filenames are
+// identical, so nothing downstream branches on which tier is active, and the committed
+// baseline is never overwritten (which would risk committing the commercial pack).
+function assembleOfficeAssets() {
+  const out = path.join(__dirname, "dist", "office");
+  fs.mkdirSync(out, { recursive: true });
+  for (const tier of ["office", "office-premium"]) {
+    const dir = path.join(__dirname, "resources", tier);
+    if (!fs.existsSync(dir)) {
+      continue;
+    }
+    for (const file of fs.readdirSync(dir)) {
+      fs.copyFileSync(path.join(dir, file), path.join(out, file));
+    }
+    if (tier === "office-premium") {
+      console.log("Applied premium office assets over the baseline.");
+    }
   }
-  for (const file of fs.readdirSync(premium)) {
-    fs.copyFileSync(path.join(premium, file), path.join(baseline, file));
-  }
-  console.log("Applied premium office assets over the baseline.");
 }
 
 async function run() {
-  applyPremiumAssets();
+  assembleOfficeAssets();
   if (isWatch) {
     for (const options of [extensionOptions, webviewOptions]) {
       const ctx = await esbuild.context(options);

@@ -33,10 +33,7 @@ export class OfficePanel {
       // Torn down when backgrounded: a hidden office does no rendering at all. The
       // webview re-sends `ready` when it comes back and receives a fresh snapshot.
       retainContextWhenHidden: false,
-      localResourceRoots: [
-        vscode.Uri.joinPath(context.extensionUri, 'dist'),
-        vscode.Uri.joinPath(context.extensionUri, 'resources', 'office'),
-      ],
+      localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist')],
     });
     OfficePanel.current = new OfficePanel(panel, context.extensionUri, provider);
   }
@@ -50,7 +47,7 @@ export class OfficePanel {
     webview.html = officeHtml({
       cspSource: webview.cspSource,
       scriptUri: webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'webview.js')).toString(),
-      assetsUri: webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'resources', 'office')).toString(),
+      assetsUri: webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'office')).toString(),
       nonce: randomBytes(16).toString('base64'),
     });
 

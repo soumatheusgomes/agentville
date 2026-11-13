@@ -9,7 +9,8 @@
 
 The baseline art is drawn by code in this repository rather than vendored from a pack, so
 the repository and the packaged `.vsix` carry no third-party asset licence. Regenerate it
-with `node scripts/generate-office-assets.mjs`. Dedication: `resources/office/LICENSE-ASSETS.txt`.
+with `node scripts/generate-office-assets.mjs`. Dedication: `resources/office/LICENSE-ASSETS.txt`, which ships in the `.vsix` as
+`dist/office/LICENSE-ASSETS.txt`.
 
 ## Sprite sheet layout
 
@@ -39,7 +40,7 @@ Both tiers must match this exactly — no code branches on which tier is active.
 ## Premium override (local only, NOT in this repository)
 
 Dropping a licensed commercial pack into `resources/office-premium/`, using the same
-filenames and layout as above, makes the build use it instead of the baseline. The
+filenames and layout as above, makes the build copy it over the baseline into `dist/office/`. The
 directory is gitignored.
 
 **Status: not cleared for release.** The candidate pack (LimeZu _Modern Interiors_)
