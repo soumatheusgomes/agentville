@@ -78,7 +78,10 @@ function toFeedEntry(entry: MessageEntry, action: string | undefined): FeedEntry
   if (!text && (!action || action === THINKING)) {
     return undefined;
   }
-  return { role: entry.type, text: text || (action ?? ''), tool: action, at: timestampOf(entry.timestamp) };
+  // "Thinking" describes the bubble, not the entry: a text turn is the agent's own prose, so
+  // it is labelled by role rather than as a thinking step (observed in a live run).
+  const tool = action === THINKING ? undefined : action;
+  return { role: entry.type, text: text || (action ?? ''), tool, at: timestampOf(entry.timestamp) };
 }
 
 /** Parse appended JSONL, keeping the latest action and every conversational entry. */

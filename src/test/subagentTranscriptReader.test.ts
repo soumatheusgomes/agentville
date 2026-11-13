@@ -108,6 +108,16 @@ describe('SubagentTranscriptReader', () => {
     expect(result.entries.map((e) => e.tool)).toEqual(['Reading one.ts']);
   });
 
+  it('labels a prose turn by role, not as Thinking', () => {
+    const prose = `${JSON.stringify({
+      type: 'assistant',
+      message: { role: 'assistant', content: [{ type: 'text', text: 'Let me check the parser.' }] },
+    })}\n`;
+    fs.writeFileSync(filePath, prose);
+    const [entry] = new SubagentTranscriptReader().read(filePath).entries;
+    expect(entry).toMatchObject({ role: 'assistant', text: 'Let me check the parser.', tool: undefined });
+  });
+
   it('ignores bookkeeping entries', () => {
     fs.writeFileSync(filePath, `${JSON.stringify({ type: 'ai-title' })}\n`);
     const reader = new SubagentTranscriptReader();
