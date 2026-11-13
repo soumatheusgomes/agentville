@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import { SessionTreeDataProvider } from './sessionTreeDataProvider';
 import { SessionTreeItem } from './treeItems';
 import { logDebug } from './logger';
+import { OfficePanel } from './officePanel';
 
 // Delay before the first log scan, giving Claude Code / Antigravity time to boot
 // and read their own files before we start competing for them.
@@ -120,6 +121,12 @@ function registerCommands(
     }
   });
   context.subscriptions.push(openProjectCmd);
+
+  const openOfficeCmd = vscode.commands.registerCommand('agentville.openOffice', () => {
+    logDebug('command(): openOffice invoked');
+    OfficePanel.show(context, provider);
+  });
+  context.subscriptions.push(openOfficeCmd);
 }
 
 export function deactivate() {

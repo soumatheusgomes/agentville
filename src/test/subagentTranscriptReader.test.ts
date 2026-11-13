@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { SubagentTranscriptReader, subagentTranscriptPath } from '../subagentTranscriptReader';
+import { INITIAL_TAIL_BYTES, SubagentTranscriptReader, subagentTranscriptPath } from '../subagentTranscriptReader';
 
 const tempDir = path.join(os.tmpdir(), 'agentville-subagent-test');
 const filePath = path.join(tempDir, 'agent-abc.jsonl');
@@ -86,6 +86,15 @@ describe('SubagentTranscriptReader', () => {
 
     fs.appendFileSync(filePath, line.slice(20));
     expect(reader.read(filePath).action).toBe('Running ls');
+  });
+
+  it('reads only the tail of a large transcript on first sight', () => {
+    const filler = assistantLine('Read', { file_path: '/a/old.ts' });
+    const lines = Math.ceil((INITIAL_TAIL_BYTES * 2) / filler.length);
+    fs.writeFileSync(filePath, filler.repeat(lines) + assistantLine('Bash', { command: 'ls' }));
+    const result = new SubagentTranscriptReader().read(filePath);
+    expect(result.action).toBe('Running ls');
+    expect(result.entries.length).toBeLessThan(lines / 2);
   });
 
   it('ignores bookkeeping entries', () => {

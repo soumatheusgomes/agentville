@@ -1,4 +1,5 @@
-// Reads a subagent's own transcript — the file the tree view never needed. Subagent
+// Reads an agent's own transcript incrementally — for a subagent, the file the tree view
+// never needed; the office also uses it for a working session's own log. Subagent
 // transcripts live at `<session-dir>/<session-id>/subagents/agent-<id>.jsonl`; the parent
 // transcript only records the launch and the completion, so the live picture of what a
 // subagent is doing exists nowhere else.
@@ -116,6 +117,19 @@ function readRange(filePath: string, start: number, end: number): Buffer {
 
 const NEWLINE = 0x0a;
 
+// The first read of a transcript starts this far from its end: session transcripts reach
+// tens of MB, and the office only needs the latest action and a short recent window. The
+// partial line this lands in fails JSON.parse and is skipped like any other bad line.
+export const INITIAL_TAIL_BYTES = 256 * 1024;
+
+function startOffset(size: number, previous: number | undefined): number {
+  if (previous === undefined) {
+    return Math.max(0, size - INITIAL_TAIL_BYTES);
+  }
+  // A file that shrank was rotated or rewritten — start over rather than read garbage.
+  return size < previous ? 0 : previous;
+}
+
 export class SubagentTranscriptReader {
   private readonly offsets = new Map<string, number>();
 
@@ -125,9 +139,7 @@ export class SubagentTranscriptReader {
         return EMPTY;
       }
       const size = fs.statSync(transcriptPath).size;
-      const previous = this.offsets.get(transcriptPath) ?? 0;
-      // A file that shrank was rotated or rewritten — start over rather than read garbage.
-      const start = size < previous ? 0 : previous;
+      const start = startOffset(size, this.offsets.get(transcriptPath));
       if (size === start) {
         return EMPTY;
       }

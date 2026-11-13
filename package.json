@@ -70,6 +70,11 @@
         "icon": "$(folder-opened)"
       },
       {
+        "command": "agentville.openOffice",
+        "title": "AgentVille: Open Office",
+        "icon": "$(game)"
+      },
+      {
         "command": "agentville.enable",
         "title": "Enable Agent Monitoring",
         "icon": "$(eye-closed)"
@@ -96,6 +101,11 @@
           "command": "agentville.refresh",
           "when": "view == agentville.world && config.agentville.enabled",
           "group": "navigation@1"
+        },
+        {
+          "command": "agentville.openOffice",
+          "when": "view == agentville.world && config.agentville.enabled",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
