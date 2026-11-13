@@ -16,27 +16,32 @@ sessions, subagents, models and live status — in one place inside VS Code.
 - **Active detection** — a session is marked active on a recent write, a reply it still owes, a long _thinking_ turn, or while any of its subagents — including a background agent it launched that runs in its own log file — are still working. `lsof` is also checked on macOS/Linux as a secondary signal (it rarely finds anything, since the log file's descriptor isn't held open between appends), and is skipped entirely on Windows.
 - **Startup delay** — waits ~10s on activation, showing a progress bar and loading state, so it doesn't compete with Claude Code for the log files while it boots.
 - **Global on/off toggle** — an eye icon in the view title. Persisted as an application-scoped setting, so disabling it stops monitoring across **every** window/instance.
+- **The office** — a 2D pixel-art office in an editor tab (**AgentVille: Open Office**, or the
+  game icon in the view title). Every session and subagent the tree shows is a character on a
+  furnished floor: desks, a meeting room, a coffee corner, a library. Characters walk in when an
+  agent appears, wander while it is around, and walk out when it is gone. Subagents wear a cap and
+  headset, idle agents are faded, and Antigravity agents are tinted blue.
+  - A **name tag** under every character, and a **speech bubble** over every working one showing
+    what it is doing right now (`Editing logParser.ts`, `Running npm test`), read live from that
+    agent's own transcript.
+  - **Click a character or its bubble** to open a side panel with its most recent activity
+    (the last 20 entries), plus **Open Log** / **Open Project**.
+  - Up to 24 characters are drawn; working agents win, and the rest are counted in a
+    `+N waiting` chip rather than silently dropped.
+  - The office reuses the tree's refresh cycle and reads nothing while closed; a backgrounded
+    tab stops rendering.
 
 ## Roadmap
 
-> ⚠️ **Not built yet.** Everything below is planned, not shipped. What the extension does
-> today is exactly the list above — a tree view. This section exists so you know where the
-> project is going, not to describe features you can use.
+> ⚠️ **Not built yet.** Everything below is planned, not shipped.
 
-The name is the plan: turn the tree into a **living 2D pixel office**.
+The office (above) is the first step toward a living pixel office. Next:
 
-- **The office** — a webview opened in an editor tab, rendering an open-floor pixel-art
-  office. Every running session and subagent is a character on the floor; they walk in when
-  an agent starts and leave when it finishes. A speech bubble follows each one showing what
-  it is doing right now (`Editing logParser.ts`, `Running npm test`), and clicking it opens
-  a side panel with that agent's most recent activity, live.
 - **Situated behaviour** — characters walk to the furniture that matches their work:
   the bookshelf when reading a file, a desk when editing, the printer when running a
   command, the coffee machine when idle.
 - **Progression** — XP and levels per agent type, achievements, a ranking of who worked
   the most, day/night cycle, and unlockable office decoration.
-
-The tree view stays either way — the office is an additional surface, not a replacement.
 
 ## Requirements
 
@@ -98,6 +103,8 @@ To uninstall: `antigravity-ide --uninstall-extension soumatheusgomes.agentville`
 - Expand a brand → a session → _Working_ / _Completed_ to see subagents.
 - **Open Log File** / **Open Project Folder** are available on each session row (inline icons).
 - Toggle monitoring on/off with the eye icon in the view title.
+- Open the office with the game icon in the view title, or **AgentVille: Open Office** from the
+  Command Palette.
 
 Want to build or modify the extension instead? See
 [docs/DEVELOPMENT.md](https://github.com/soumatheusgomes/agentville/blob/main/docs/DEVELOPMENT.md).

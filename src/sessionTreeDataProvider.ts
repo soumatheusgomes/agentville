@@ -188,6 +188,20 @@ export class SessionTreeDataProvider implements vscode.TreeDataProvider<TreeItem
   /** Build the tree's top-level session list. Workspace scoping (which folders are open) is read
    * here; the filter/nest/dedupe logic lives in the pure, testable assembleVisibleSessions(). The
    * nested background-agent map it produces is stored for getChildren() to render under launchers. */
+  /**
+   * The sessions the tree shows, for the office: same dedupe and recency filter, with each
+   * launcher's background agents folded in as subagents (the tree nests them one level down).
+   */
+  public getSessions(): Session[] {
+    if (!this.monitoringEnabled) {
+      return [];
+    }
+    return this.getVisibleSessions().map((session) => {
+      const nested = this.nestedAgents.get(session.id) ?? [];
+      return nested.length > 0 ? { ...session, subagents: [...session.subagents, ...nested] } : session;
+    });
+  }
+
   private getVisibleSessions(): Session[] {
     const activeFolders = vscode.workspace.workspaceFolders;
     const activePaths = activeFolders ? activeFolders.map((f) => path.normalize(f.uri.fsPath).toLowerCase()) : [];

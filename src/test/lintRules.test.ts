@@ -15,13 +15,18 @@ const SRC = path.join(REPO_ROOT, 'src');
 
 const eslint = new ESLint({ cwd: REPO_ROOT });
 
+// Each probe runs type-aware ESLint; the first one in a run (and any file no earlier probe
+// touched) pays a cold type-check of the project, which overruns vitest's 5s default under
+// --coverage instrumentation.
+const PROBE_TIMEOUT_MS = 30_000;
+
 /** Rule ids reported for `code` linted as if it were the file at `filePath`. */
 async function ruleIdsFor(code: string, filePath: string): Promise<string[]> {
   const [result] = await eslint.lintText(code, { filePath, warnIgnored: false });
   return result.messages.map((message) => message.ruleId).filter((id): id is string => id !== null);
 }
 
-describe('architectural lint rules', () => {
+describe('architectural lint rules', { timeout: PROBE_TIMEOUT_MS }, () => {
   it('stops the parsing core from importing the vscode package', async () => {
     const ruleIds = await ruleIdsFor(
       `import * as vscode from 'vscode';\nexport const probe: unknown = vscode;\n`,
@@ -54,9 +59,33 @@ describe('architectural lint rules', () => {
 
     expect(ruleIds).toContain('import-x/no-restricted-paths');
   });
+
+  it('stops the webview from importing the extension side, except the wire types', async () => {
+    const webviewMain = path.join(SRC, 'webview', 'main.ts');
+    const blocked = await ruleIdsFor(
+      `import { logDebug } from '../logger';\nexport const probe: unknown = logDebug;\n`,
+      webviewMain,
+    );
+    const allowed = await ruleIdsFor(
+      `import type { AgentView } from '../officeTypes';\nexport const probe: AgentView[] = [];\n`,
+      webviewMain,
+    );
+
+    expect(blocked).toContain('no-restricted-imports');
+    expect(allowed).not.toContain('no-restricted-imports');
+  });
+
+  it('keeps Phaser and the DOM out of the webview simulation', async () => {
+    const world = path.join(SRC, 'webview', 'simulation', 'world.ts');
+    const phaser = await ruleIdsFor(`import Phaser from 'phaser';\nexport const probe: unknown = Phaser;\n`, world);
+    const dom = await ruleIdsFor(`export const probe: unknown = document.body;\n`, world);
+
+    expect(phaser).toContain('no-restricted-imports');
+    expect(dom).toContain('no-restricted-globals');
+  });
 });
 
-describe('import cycle detection', () => {
+describe('import cycle detection', { timeout: PROBE_TIMEOUT_MS }, () => {
   // A cycle only exists between files that are really on disk — the resolver reads the
   // second half of the pair from the filesystem, so this pair can't be virtual.
   const cycleFiles = [path.join(SRC, 'zzLintProbeA.ts'), path.join(SRC, 'zzLintProbeB.ts')];
