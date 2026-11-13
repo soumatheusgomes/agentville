@@ -54,6 +54,21 @@ describe('architectural lint rules', () => {
 
     expect(ruleIds).toContain('import-x/no-restricted-paths');
   });
+
+  it('stops the webview from importing the extension side, except the wire types', async () => {
+    const webviewMain = path.join(SRC, 'webview', 'main.ts');
+    const blocked = await ruleIdsFor(
+      `import { logDebug } from '../logger';\nexport const probe: unknown = logDebug;\n`,
+      webviewMain,
+    );
+    const allowed = await ruleIdsFor(
+      `import type { AgentView } from '../officeTypes';\nexport const probe: AgentView[] = [];\n`,
+      webviewMain,
+    );
+
+    expect(blocked).toContain('no-restricted-imports');
+    expect(allowed).not.toContain('no-restricted-imports');
+  });
 });
 
 describe('import cycle detection', () => {

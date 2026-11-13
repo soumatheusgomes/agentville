@@ -12,13 +12,30 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
 // parsing core"). Source files are flat under `src/`, so the layers are classified as
 // `boundaries/files` categories — `boundaries/elements` patterns match folders, not
 // individual files.
-const VSCODE_LAYER_MODULES = ['extension', 'sessionTreeDataProvider', 'treeItems', 'subagentTreeChildren'];
+const VSCODE_LAYER_MODULES = [
+  'extension',
+  'sessionTreeDataProvider',
+  'treeItems',
+  'subagentTreeChildren',
+  'officePanel',
+];
 const VSCODE_LAYER_GLOB = `src/{${VSCODE_LAYER_MODULES.join(',')}}.ts`;
 // Negated rather than a plain `src/*.ts` catch-all: categories match independently, so
 // an inclusive pattern would tag the VS Code modules as `core` as well and the layer
 // policy would then fire on their own legitimate imports. A new file dropped into
 // `src/` therefore lands in `core`, which is the restrictive side.
 const CORE_GLOB = `src/!(${VSCODE_LAYER_MODULES.join('|')}).ts`;
+
+// Imports the browser-side webview bundle may not make (see the webview blocks below).
+const WEBVIEW_IMPORTS = {
+  paths: [{ name: 'vscode', message: 'The webview runs in a browser — it has no `vscode` module.' }],
+  patterns: [
+    {
+      regex: '^\\.\\./(\\.\\./)?(?!officeTypes$)[^/]+$',
+      message: 'The webview may only import `officeTypes` from the extension side.',
+    },
+  ],
+};
 
 export default defineConfig(
   {
@@ -184,6 +201,27 @@ export default defineConfig(
           ],
         },
       ],
+    },
+  },
+  // The webview is a browser bundle: it must never reach the `vscode` package (absent
+  // in a webview) nor the extension's Node-side modules. Only the dependency-free wire
+  // types are shared.
+  {
+    files: ['src/webview/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', WEBVIEW_IMPORTS] },
+  },
+  // Simulation logic must also stay renderer-agnostic: it is the only part of the webview
+  // covered by unit tests, and importing Phaser would make it untestable in vitest's node
+  // environment. Restates WEBVIEW_IMPORTS because a later flat-config block replaces a
+  // rule's options rather than merging them.
+  {
+    files: ['src/webview/simulation/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { ...WEBVIEW_IMPORTS, patterns: [...WEBVIEW_IMPORTS.patterns, { group: ['phaser', 'phaser/*'] }] },
+      ],
+      'no-restricted-globals': ['error', 'document', 'window'],
     },
   },
   // VS Code's `TreeDataProvider` contract types its change event as
