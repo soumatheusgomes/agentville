@@ -29,6 +29,28 @@ describe('extractAction', () => {
     expect(extractAction(entry)).toBe(`Running ${long.slice(0, 30)}…`);
   });
 
+  it('skips cd and env-var preambles so the bubble shows what actually runs', () => {
+    const run = (command: string) =>
+      extractAction(assistantEntry([{ type: 'tool_use', name: 'Bash', input: { command } }]));
+    expect(run('cd /home/user/soumatheusgomes/agentville && npm test')).toBe('Running npm test');
+    expect(run('cd "/a b/c"; cd src && git status')).toBe('Running git status');
+    expect(run('GIT_LFS_SKIP_SMUDGE=1 git clone x')).toBe('Running git clone x');
+    expect(run('NODE_ENV=test DEBUG= npx vitest')).toBe('Running npx vitest');
+    expect(run('cd /repo && S=/tmp/out && cat > $S/x.ts')).toBe('Running cat > $S/x.ts');
+  });
+
+  it('flattens a multi-line command onto one line', () => {
+    const entry = assistantEntry([
+      { type: 'tool_use', name: 'Bash', input: { command: "python3 - <<'EOF'\nprint(1)" } },
+    ]);
+    expect(extractAction(entry)).toBe("Running python3 - <<'EOF' print(1)");
+  });
+
+  it('keeps a command that is nothing but a preamble', () => {
+    const entry = assistantEntry([{ type: 'tool_use', name: 'Bash', input: { command: 'cd /tmp && ' } }]);
+    expect(extractAction(entry)).toBe('Running cd /tmp &&');
+  });
+
   it('renders Grep and Glob as Searching', () => {
     const entry = assistantEntry([{ type: 'tool_use', name: 'Grep', input: { pattern: 'extractAction' } }]);
     expect(extractAction(entry)).toBe('Searching for extractAction');

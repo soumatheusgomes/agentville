@@ -37,11 +37,27 @@ function renderEdit(input: ToolInput): string {
   return withDetail('Editing', file && basename(file));
 }
 
+// `cd <dir> && ` / `cd <dir>; ` and `NAME=value ` / `NAME=value && ` prefixes. Real commands lead with these
+// constantly (observed in live transcripts: `cd /home/user/project && npm test`), and they
+// would spend the whole bubble on a path instead of on what is being run.
+const COMMAND_PREAMBLE =
+  /^\s*(?:cd\s+(?:"[^"]*"|'[^']*'|\S+)\s*(?:&&|;)\s*|[A-Za-z_][A-Za-z0-9_]*=\S*(?:\s*(?:&&|;)\s*|\s+))/;
+
+function stripPreamble(command: string): string {
+  let current = command;
+  for (let match = COMMAND_PREAMBLE.exec(current); match; match = COMMAND_PREAMBLE.exec(current)) {
+    current = current.slice(match[0].length);
+  }
+  // Heredocs and multi-line scripts would otherwise put line breaks inside the bubble.
+  return (current.trim() || command.trim()).replace(/\s+/g, ' ');
+}
+
 function renderBash(input: ToolInput): string {
-  const command = asString(input.command);
-  if (!command) {
+  const raw = asString(input.command);
+  if (!raw) {
     return 'Running a command';
   }
+  const command = stripPreamble(raw);
   return command.length > MAX_COMMAND_CHARS ? `Running ${command.slice(0, MAX_COMMAND_CHARS)}…` : `Running ${command}`;
 }
 

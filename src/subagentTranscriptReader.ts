@@ -68,9 +68,14 @@ function timestampOf(value: unknown): number {
   return Number.isNaN(at) ? Date.now() : at;
 }
 
+const THINKING = 'Thinking';
+
 function toFeedEntry(entry: MessageEntry, action: string | undefined): FeedEntry | undefined {
   const text = textOf(entry.message.content);
-  if (!text && !action) {
+  // Claude Code writes each content block as its own line, so a thinking block arrives as a
+  // text-less assistant entry. It still moves the bubble to "Thinking", but as a feed entry
+  // it is noise — observed as most of the window on a real transcript.
+  if (!text && (!action || action === THINKING)) {
     return undefined;
   }
   return { role: entry.type, text: text || (action ?? ''), tool: action, at: timestampOf(entry.timestamp) };

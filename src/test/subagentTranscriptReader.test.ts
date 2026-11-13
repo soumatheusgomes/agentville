@@ -97,6 +97,17 @@ describe('SubagentTranscriptReader', () => {
     expect(result.entries.length).toBeLessThan(lines / 2);
   });
 
+  it('moves the action to Thinking without adding a text-less thinking entry to the feed', () => {
+    const thinking = `${JSON.stringify({
+      type: 'assistant',
+      message: { role: 'assistant', content: [{ type: 'thinking', thinking: '', signature: 'x' }] },
+    })}\n`;
+    fs.writeFileSync(filePath, assistantLine('Read', { file_path: '/a/one.ts' }) + thinking);
+    const result = new SubagentTranscriptReader().read(filePath);
+    expect(result.action).toBe('Thinking');
+    expect(result.entries.map((e) => e.tool)).toEqual(['Reading one.ts']);
+  });
+
   it('ignores bookkeeping entries', () => {
     fs.writeFileSync(filePath, `${JSON.stringify({ type: 'ai-title' })}\n`);
     const reader = new SubagentTranscriptReader();
