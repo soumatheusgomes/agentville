@@ -3,7 +3,7 @@
     "module": "NodeNext",
     "target": "ES2022",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "ScriptHost"],
     "sourceMap": true,
     "strict": true,
     // Pin automatic @types inclusion to just "node". Without this, TS auto-includes every

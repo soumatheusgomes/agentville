@@ -31,7 +31,7 @@ const STYLES = `
     background: color-mix(in srgb, var(--vscode-editor-background) 78%, transparent); white-space: nowrap;
   }
   .feed {
-    position: absolute; top: 0; right: 0; width: min(380px, 90%); height: 100%; box-sizing: border-box;
+    position: absolute; top: 0; right: 0; z-index: 2; width: min(380px, 90%); height: 100%; box-sizing: border-box;
     overflow-y: auto; padding: 12px; background: var(--vscode-sideBar-background, var(--vscode-editor-background));
     border-left: 1px solid var(--vscode-editorWidget-border); color: var(--vscode-editor-foreground);
     font: 12px var(--vscode-font-family);
@@ -48,7 +48,7 @@ const STYLES = `
   .feed-list pre { white-space: pre-wrap; word-break: break-word; margin: 4px 0 12px; font: 12px var(--vscode-editor-font-family); }
   .feed-meta { opacity: 0.65; font-size: 10px; text-transform: uppercase; }
   .overflow {
-    position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 8px;
+    position: absolute; left: 8px; bottom: 8px; z-index: 1; padding: 2px 8px; border-radius: 8px;
     background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
     font: 11px var(--vscode-font-family);
   }
